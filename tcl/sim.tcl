@@ -5,19 +5,22 @@
 ## Updated :
 ## History:
 ## 2026-01-01  Initial version
+## 2026-01-04  Modified to enable simulation with a specified seed value
 ## ------------------------------------------------------------
 
 puts "=== sim.tcl start ==="
 
 # default values
-set MDL_ROOTS   $::CFG(MDL_ROOTS)
-set BOARD_NAME  $::CFG(BOARD_NAME)
-set BOARD_TOP   work.${BOARD_NAME}
-set SEED        $::CFG(SEED)
-set SCENARIO    $::CFG(SCENARIO) 
-set ENABLE_GUI  $::CFG(ENABLE_GUI)
-set ENABLE_WAVE $::CFG(ENABLE_WAVE)
-set ENABLE_COV  $::CFG(ENABLE_COV)
+set DUT_ROOT        $::CFG(DUT_ROOT)
+set MDL_ROOTS       $::CFG(MDL_ROOTS)
+set BOARD_NAME      $::CFG(BOARD_NAME)
+set BOARD_TOP       work.${BOARD_NAME}
+set SEED            $::CFG(SEED)
+set SCENARIO        $::CFG(SCENARIO) 
+set SCENARIO_DIR    $::CFG(SCENARIO_DIR)
+set ENABLE_GUI      $::CFG(ENABLE_GUI)
+set ENABLE_WAVE     $::CFG(ENABLE_WAVE)
+set ENABLE_COV      $::CFG(ENABLE_COV)
 
 set WAVE_DIR "./result/wave"
 set COV_DIR "./result/cov"
@@ -52,6 +55,7 @@ puts "  vsim_opt  = ${vsim_opt}"
 # run simulation
 eval vsim ${vsim_opt} \
      -L work \
+     +DATA_DIR=${DUT_ROOT}/${SCENARIO_DIR} \
      +SCENARIO=${SCENARIO} \
      ${BOARD_TOP} \
      -do "tcl/dumpmisc.tcl"
