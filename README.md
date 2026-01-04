@@ -63,14 +63,17 @@ repeatability and simplicity.
 ### Run specified test list
 ```powershell
 .\run_sim.ps1 <DUT_ROOT> -t
+```
 
 ### Run all tests with waveform and coverage enabled
 ```powershell
 .\run_sim.ps1 <DUT_ROOT> -a -w -c
+```
 
 ### Run simulation in GUI mode
 ```powershell
 .\run_sim.ps1 <DUT_ROOT> -g
+```
 
 The simulation environment supports multiple DUTs and
 verification models by specifying their root directories
