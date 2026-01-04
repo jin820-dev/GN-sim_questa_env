@@ -55,6 +55,7 @@ puts "  vsim_opt  = ${vsim_opt}"
 # run simulation
 eval vsim ${vsim_opt} \
      -L work \
+     -sv_seed ${SEED} \
      +DATA_DIR=${DUT_ROOT}/${SCENARIO_DIR} \
      +SCENARIO=${SCENARIO} \
      ${BOARD_TOP} \
