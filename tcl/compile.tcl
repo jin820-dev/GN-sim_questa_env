@@ -5,6 +5,7 @@
 ## Updated :
 ## History:
 ## 2026-01-01  Initial version
+## 2026-01-05  Added scoreboard compilation
 ## ------------------------------------------------------------
 
 puts "=== compile.tcl start ==="
@@ -15,6 +16,7 @@ set SRCLIST         $::CFG(SRCLIST)
 set BOARD_DIR       $::CFG(BOARD_DIR)
 set SCENARIO        $::CFG(SCENARIO) 
 set SCENARIO_DIR    $::CFG(SCENARIO_DIR)
+set SCOREBOARD_DIR  $::CFG(SCOREBOARD_DIR)
 set SVA_DIR         $::CFG(SVA_DIR)
 
 set TMP_DIR  [file normalize "tmp"]
@@ -78,12 +80,17 @@ vlog -sv \
      ${INCD_MDL_LIBS} \
      "${DUT_ROOT}/${SCENARIO_DIR}/${SCENARIO}.sv"
 
-# compile SVA
+# SVA
 vlog -sv \
      -mfcu \
      -cuname work \
      -work work \
      "${DUT_ROOT}/${SVA_DIR}/*.sv"
+
+# scoreboard
+vlog -sv \
+     -work work \
+     "${DUT_ROOT}/${SCOREBOARD_DIR}/*.sv"
 
 # board
 vlog \

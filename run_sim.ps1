@@ -5,6 +5,7 @@
 ## Updated :
 ## History:
 ## 2026-01-01  Initial version
+## 2026-01-05  Added simulation result summarization feature
 ## ------------------------------------------------------------
 
 param (
@@ -75,3 +76,14 @@ foreach ($scn in $TEST_LIST) {
 
 Write-Host "=== run_sim.ps1 end ==="
 Write-Host ""
+
+# result summarize
+Write-Host "=== Summarizing simulation logs ==="
+py -3 .\tcl\summarize_questa_logs.py ".\$env:LOG_DIR\*.log"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Some tests FAILED"
+    exit 1
+} else {
+    Write-Host "All tests PASSED"
+    exit 0
+}
