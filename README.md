@@ -1,21 +1,27 @@
 # GN-sim_questa_env
-Simulation environment for Questa Prime Lite (PowerShell based)
+Simulation environment for **Questa Prime Lite** (PowerShell based)
 
 - Simulator: Questa Prime Lite
-- Language: ps1 / tcl
+- Language: PowerShell / Tcl / Python
 - License: MIT
 
 ## Overview
-This repository provides a simulation environment for
-**Questa Prime Lite**.
+This repository provides a **script-driven simulation environment**
+for running SystemVerilog-based verification on **Questa Prime Lite**
+under Windows.
 
-It is designed to run SystemVerilog-based verification
-using a script-driven flow on Windows, focusing on
-repeatability and simplicity.
+The environment is designed with the following principles:
+- One simulation run per test scenario
+- One log file per scenario
+- Final Pass / Fail decision based on log analysis
+
+This approach emphasizes **repeatability, debuggability, and simplicity**
+over monolithic batch simulation.
 
 ## Requirements
 - Questa Prime Lite
 - PowerShell (Windows)
+- Python 3.x (for result summarization)
 
 ## Features
 - Script-based simulation control (PowerShell)
@@ -25,6 +31,7 @@ repeatability and simplicity.
 - Waveform dump control
 - Clean-up utilities for simulation artifacts
 - Coverage collection (limited in Questa Prime Lite)
+- **Log-based Pass / Fail summarization**
 
 > Note:
 > Coverage merge and report scripts are included,
@@ -45,6 +52,7 @@ repeatability and simplicity.
 │   ├─ sim.tcl            # Simulation control
 │   ├─ default.tcl        # Default simulation sequence
 │   └─ dumpmisc.tcl       # Wave / signal dump settings
+│   └─ summarize_questa_logs.py  # Simulation result summarizer
 │
 ├─ result/
 │   ├─ log/               # Simulation logs
@@ -75,9 +83,34 @@ repeatability and simplicity.
 .\run_sim.ps1 <DUT_ROOT> -g
 ```
 
-The simulation environment supports multiple DUTs and
-verification models by specifying their root directories
-via script arguments or environment variables.
+Each test scenario is executed independently, and its output
+is stored as a dedicated log file under result/log/.
+
+## Result Summarization
+
+After all simulations are completed, test results can be summarized
+by parsing the generated log files:
+
+``` powershell
+py -3 tcl/summarize_questa_logs.py result/log/*.log
+```
+
+This generates:
+- A console summary table
+- result/summary.csv for further analysis
+
+## Pass / Fail Criteria
+A test scenario is judged as FAILED if any of the following is detected
+in its log file:
+- [TEST] RESULT=FAIL tag
+- [SCB] TEST FAILED reported by a scoreboard
+- Simulator-reported runtime errors (Errors > 0), including SVA violations
+
+## Notes
+- This environment is optimized for Questa Prime Lite limitations.
+- Each test scenario is isolated to simplify failure analysis.
+- Python is used only for post-processing and does not affect simulation.
+- The environment is intended for functional and protocol verification.
 
 ## License
 This project is licensed under the MIT License.
