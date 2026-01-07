@@ -6,6 +6,7 @@
 ## History:
 ## 2026-01-01  Initial version
 ## 2026-01-05  Added scoreboard compilation
+## 2026-01-06  Added guard processing
 ## ------------------------------------------------------------
 
 puts "=== compile.tcl start ==="
@@ -16,14 +17,36 @@ set SRCLIST         $::CFG(SRCLIST)
 set BOARD_DIR       $::CFG(BOARD_DIR)
 set SCENARIO        $::CFG(SCENARIO) 
 set SCENARIO_DIR    $::CFG(SCENARIO_DIR)
-set SCOREBOARD_DIR  $::CFG(SCOREBOARD_DIR)
-set SVA_DIR         $::CFG(SVA_DIR)
 
+# --------------------------------------------------
+# Optional config defaults (avoid missing CFG(*) errors)
+# --------------------------------------------------
+if {![info exists ::CFG(SCOREBOARD_DIR)]} { set ::CFG(SCOREBOARD_DIR) "" }
+if {![info exists ::CFG(SVA_DIR)]}        { set ::CFG(SVA_DIR) "" }
+
+# Optional feature switches (default: enabled for backward compatibility)
+if {![info exists ::CFG(ENABLE_SCB)]} { set ::CFG(ENABLE_SCB) 1 }
+if {![info exists ::CFG(ENABLE_SVA)]} { set ::CFG(ENABLE_SVA) 1 }
+
+# clean
 set TMP_DIR  [file normalize "tmp"]
 set LIB_DIR  "$TMP_DIR/lib"
+
+# clean (delete only build artifacts, keep tmp/.gitkeep)
+if {[file exists $LIB_DIR] && [file isdirectory $LIB_DIR]} {
+    if {[file tail $LIB_DIR] eq "lib" && [file tail [file dirname $LIB_DIR]] eq "tmp"} {
+        puts "INFO: clean lib directory ($LIB_DIR)"
+        file delete -force $LIB_DIR
+    } else {
+        error "Refuse to delete unexpected directory: $LIB_DIR"
+    }
+}
+if {![file exists $TMP_DIR]} {
+    puts "INFO: tmp directory not found, skip clean"
+}
 file mkdir $LIB_DIR
 
-# library helper
+# helper
 proc make_lib {libname} {
     global LIB_DIR
     set libpath "$LIB_DIR/$libname"
@@ -32,6 +55,16 @@ proc make_lib {libname} {
         vlib $libpath
     }
     vmap $libname $libpath
+}
+
+proc is_directory_empty {dir_path} {
+    set file_list [glob -nocomplain "$dir_path/*"]
+
+    if {[llength $file_list] == 0} {
+        return 1 ;# empty (True)
+    } else {
+        return 0 ;# not empty (False)
+    }
 }
 
 # create libraries
@@ -81,16 +114,36 @@ vlog -sv \
      "${DUT_ROOT}/${SCENARIO_DIR}/${SCENARIO}.sv"
 
 # SVA
-vlog -sv \
-     -mfcu \
-     -cuname work \
-     -work work \
-     "${DUT_ROOT}/${SVA_DIR}/*.sv"
+if {$::CFG(ENABLE_SVA)} {
+    if { [file isdirectory ${DUT_ROOT}/$::CFG(SVA_DIR)] } {
+        if {[is_directory_empty ${DUT_ROOT}/$::CFG(SVA_DIR)]} {
+            puts "INFO: ENABLE_SVA=1 but SVA_DIR is empty. Skip SVA compile."
+        } else {
+            vlog -sv \
+                 -mfcu \
+                 -cuname work \
+                 -work work \
+                 "${DUT_ROOT}/$::CFG(SVA_DIR)/*.sv"
+        }
+    }
+} else {
+    puts "INFO: SVA compile disabled (ENABLE_SVA=0)"
+}
 
-# scoreboard
-vlog -sv \
-     -work work \
-     "${DUT_ROOT}/${SCOREBOARD_DIR}/*.sv"
+# Scoreboard
+if {$::CFG(ENABLE_SCB)} {
+    if { [file isdirectory ${DUT_ROOT}/$::CFG(SCOREBOARD_DIR)] } {
+        if {[is_directory_empty ${DUT_ROOT}/$::CFG(SCOREBOARD_DIR)]} {
+            puts "INFO: ENABLE_SCB=1 but SCOREBOARD_DIR is empty. Skip SCB compile."
+        } else {
+            vlog -sv \
+                 -work work \
+                "${DUT_ROOT}/$$::CFG(SCOREBOARD_DIR)/*.sv"
+        }
+    }
+} else {
+    puts "INFO: Scoreboard compile disabled (ENABLE_SCB=0)"
+}
 
 # board
 vlog \
